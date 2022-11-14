@@ -75,6 +75,7 @@ class Cyclegan:
         """
 
         self.checkpoint_manager.save()
+        print(f"checkpoint saved in {self.checkpoint_path}")
 
         pass
 
@@ -96,6 +97,8 @@ class Cyclegan:
     def train_step(self, real_a, real_b):
 
         with tf.GradientTape(persistent=True) as tape:
+
+            # generate images for cycle loss
             
             fake_b = self.generator_b(real_a, training=True)
             cycled_a = self.generator_a(fake_b, training=True)
@@ -103,10 +106,11 @@ class Cyclegan:
             fake_a = self.generator_a(real_b, training=True)
             cycled_b = self.generator_b(fake_a, training=True)
 
+            # generate images for identity loss
+
             same_a = self.generator_a(real_a, training=True)
             same_b = self.generator_b(real_b, training=True)
 
-            
 
             # discriminator
 
@@ -116,13 +120,15 @@ class Cyclegan:
             disc_fake_a = self.discriminator_a(fake_a, training=True)
             disc_fake_b = self.discriminator_b(fake_b, training=True)
 
-            #losses
+            # losses
 
             gen_b_loss = self.generator_loss(disc_fake_b)
             gen_a_loss = self.generator_loss(disc_fake_a)
 
 
             total_cycle_loss = self.cycle_loss(real_a, cycled_a) + self.cycle_loss(real_b, cycled_b)
+            
+            # a=f b=g, a=x b=y
 
             total_generator_b_loss = gen_b_loss + total_cycle_loss + self.identity_loss(real_b, same_b)
             total_generator_a_loss = gen_a_loss + total_cycle_loss + self.identity_loss(real_a, same_a)
