@@ -168,6 +168,19 @@ def generator(norm_type='batchnorm'):
 
     x = last(x)
 
+    padding = [[14, 14], [4, 4], [0, 0]]
+
+    zero_matrix = tf.zeros((100, 120, 3), dtype=tf.float32)
+    padded_matrix = tf.pad(zero_matrix, padding, mode='CONSTANT', constant_values=1.0)
+    
+    ones_matrix = tf.ones((100, 120, 3), dtype=tf.float32)
+    inv_padded_matrix = tf.pad(ones_matrix, padding, mode='CONSTANT', constant_values=0.0)
+
+    ones_matrix = tf.keras.layers.Lambda(lambda inputs: inputs[0] * inputs[1])([inputs, padded_matrix])
+    inv_padded_matrix = tf.keras.layers.Lambda(lambda inputs: inputs[0] * inputs[1])([x, inv_padded_matrix])
+
+    x = tf.keras.layers.Add()([ones_matrix, inv_padded_matrix])
+
     return tf.keras.Model(inputs=inputs, outputs=x)
 
 
